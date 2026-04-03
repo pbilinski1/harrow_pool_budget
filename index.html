@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget Simulator - Interactive Learning</title>
+    <title>Budget Simulator with Risk Analysis</title>
     <style>
         * {
             margin: 0;
@@ -12,33 +12,35 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            color: #333;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
         }
 
         .header {
             text-align: center;
             margin-bottom: 40px;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 20px;
+            border-bottom: 3px solid #f0f0f0;
+            padding-bottom: 30px;
         }
 
         .header h1 {
-            font-size: 28px;
+            font-size: 32px;
             margin-bottom: 10px;
-            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .header p {
@@ -68,18 +70,20 @@
             color: #7f8c8d;
             cursor: pointer;
             transition: all 0.3s ease;
+            position: relative;
         }
 
-        .progress-dot:hover:not(.disabled) {
+        .progress-dot:hover {
             transform: scale(1.05);
-            border-color: #3498db;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
 
         .progress-dot.active {
-            background: #3498db;
+            background: #667eea;
             color: white;
-            border-color: #2980b9;
-            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2);
+            border-color: #5568d3;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
         }
 
         .progress-dot.completed {
@@ -88,9 +92,35 @@
             border-color: #229954;
         }
 
-        .progress-dot.disabled {
+        .progress-dot.locked {
+            opacity: 0.4;
             cursor: not-allowed;
-            opacity: 0.5;
+        }
+
+        .progress-dot.locked:hover {
+            transform: none;
+            border-color: #bdc3c7;
+            box-shadow: none;
+        }
+
+        .progress-dot-tooltip {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c3e50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .progress-dot:hover .progress-dot-tooltip {
+            opacity: 1;
         }
 
         .step-container {
@@ -115,7 +145,7 @@
 
         .step-title {
             font-size: 22px;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 12px;
             color: #2c3e50;
         }
@@ -233,13 +263,8 @@
         }
 
         .line-items.active {
-            border-color: #3498db;
-            background: rgba(52, 152, 219, 0.05);
-        }
-
-        .line-items.complete {
-            border-color: #27ae60;
-            background: rgba(39, 174, 96, 0.05);
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
         }
 
         .line-item {
@@ -247,15 +272,9 @@
             border: 1px solid #dee2e6;
             border-radius: 4px;
             padding: 8px 12px;
-            cursor: default;
             font-size: 13px;
             color: #2c3e50;
-            transition: all 0.2s ease;
             border-left: 3px solid #27ae60;
-        }
-
-        .line-item:hover {
-            background: #f8f9fa;
         }
 
         .button-group {
@@ -277,24 +296,23 @@
             transition: all 0.2s ease;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             background: #ecf0f1;
             border-color: #95a5a6;
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: scale(0.98);
         }
 
         button.primary {
-            background: #3498db;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-color: #2980b9;
+            border: none;
         }
 
         button.primary:hover {
-            background: #2980b9;
-            border-color: #1f618d;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
         button:disabled {
@@ -416,29 +434,29 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #3498db;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .assumption-input input[type="range"]::-webkit-slider-thumb:hover {
-            background: #2980b9;
             transform: scale(1.1);
+            box-shadow: 0 0 0 6px rgba(102, 126, 234, 0.2);
         }
 
         .assumption-input input[type="range"]::-moz-range-thumb {
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #3498db;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             cursor: pointer;
             border: none;
             transition: all 0.2s ease;
         }
 
         .assumption-input input[type="range"]::-moz-range-thumb:hover {
-            background: #2980b9;
             transform: scale(1.1);
+            box-shadow: 0 0 0 6px rgba(102, 126, 234, 0.2);
         }
 
         .assumption-value {
@@ -490,6 +508,205 @@
             font-weight: 600;
         }
 
+        /* Risk Analysis Styles */
+        .risk-section {
+            margin-bottom: 30px;
+        }
+
+        .risk-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .risk-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .risk-card {
+            border-radius: 8px;
+            padding: 16px;
+            border-left: 4px solid;
+            background: #f8f9fa;
+        }
+
+        .risk-card.high {
+            border-left-color: #e74c3c;
+            background: #fadbd8;
+        }
+
+        .risk-card.medium {
+            border-left-color: #f39c12;
+            background: #fef5e7;
+        }
+
+        .risk-card.low {
+            border-left-color: #27ae60;
+            background: #d5f4e6;
+        }
+
+        .risk-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .risk-card-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #2c3e50;
+            flex: 1;
+        }
+
+        .risk-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            margin-left: 8px;
+        }
+
+        .risk-badge.high {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .risk-badge.medium {
+            background: #f39c12;
+            color: white;
+        }
+
+        .risk-badge.low {
+            background: #27ae60;
+            color: white;
+        }
+
+        .risk-description {
+            font-size: 12px;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .risk-parameters {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .risk-param-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .risk-param-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .risk-param-label {
+            font-weight: 600;
+            min-width: 80px;
+            color: #2c3e50;
+        }
+
+        .risk-param-input {
+            width: 60px;
+            padding: 4px 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .risk-param-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .risk-param-unit {
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+
+        .risk-mitigation {
+            font-size: 12px;
+            color: #666;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .risk-mitigation-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .sensitivity-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .sensitivity-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 12px;
+            color: #2c3e50;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .sensitivity-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 12px;
+        }
+
+        .sensitivity-table .scenario-label {
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .sensitivity-table .worst-case {
+            background: #fadbd8;
+            color: #c0392b;
+            font-weight: 600;
+        }
+
+        .sensitivity-table .base-case {
+            background: #d5f4e6;
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .sensitivity-table .best-case {
+            background: #d6eaf8;
+            color: #2980b9;
+            font-weight: 600;
+        }
+
         .success-badge {
             display: inline-block;
             background: #d4edda;
@@ -525,20 +742,101 @@
             margin-bottom: 16px;
             line-height: 1.6;
         }
+
+        .risk-score-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .risk-bar {
+            flex: 1;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .risk-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #f39c12, #e74c3c);
+            transition: width 0.3s ease;
+        }
+
+        .risk-percentage {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2c3e50;
+            min-width: 40px;
+        }
+
+        .nav-button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .nav-button-group .nav-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .update-notification {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-left: 4px solid #17a2b8;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 12px;
+            color: #0c5460;
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>💰 Budget Simulator</h1>
-            <p>Learn financial planning through interactive budget allocation and forecasting</p>
+            <h1>💰 Budget Simulator with Risk Analysis</h1>
+            <p>Learn financial planning with comprehensive, interactive risk assessment</p>
         </div>
 
         <div class="progress-bar" id="progressBar">
-            <div class="progress-dot active" data-step="0">1</div>
-            <div class="progress-dot disabled" data-step="1">2</div>
-            <div class="progress-dot disabled" data-step="2">3</div>
-            <div class="progress-dot disabled" data-step="3">4</div>
+            <div class="progress-dot active" data-step="0">
+                1
+                <div class="progress-dot-tooltip">Budget Allocation</div>
+            </div>
+            <div class="progress-dot locked" data-step="1">
+                2
+                <div class="progress-dot-tooltip">Operating Result</div>
+            </div>
+            <div class="progress-dot locked" data-step="2">
+                3
+                <div class="progress-dot-tooltip">Assumptions</div>
+            </div>
+            <div class="progress-dot locked" data-step="3">
+                4
+                <div class="progress-dot-tooltip">Projections</div>
+            </div>
+            <div class="progress-dot locked" data-step="4">
+                5
+                <div class="progress-dot-tooltip">Risk Analysis</div>
+            </div>
         </div>
 
         <!-- STEP 1: Budget Allocation -->
@@ -556,9 +854,11 @@
             <div class="section-label">Budget categories:</div>
             <div class="budget-grid" id="categoriesGrid"></div>
 
-            <div class="button-group">
-                <button class="primary" onclick="checkAllocation()">Check Answer</button>
-                <button onclick="resetAllocation()">Reset</button>
+            <div class="nav-button-group">
+                <div class="nav-buttons">
+                    <button class="primary" onclick="checkAllocation()">Check Answer</button>
+                    <button onclick="resetAllocation()">Reset</button>
+                </div>
             </div>
         </div>
 
@@ -589,9 +889,11 @@
                 <p>The facility is projected to run at a loss in the first year. However, with growing membership and cost controls, the business plan projects break-even in Year 3.</p>
             </div>
 
-            <div class="button-group">
-                <button class="primary" onclick="goToStep(2)">Continue to Assumptions</button>
-                <button onclick="goToStep(0)">Back to Step 1</button>
+            <div class="nav-button-group">
+                <div class="nav-buttons">
+                    <button onclick="goToStep(0)">Back to Step 1</button>
+                    <button class="primary" onclick="goToStep(2)">Continue to Assumptions</button>
+                </div>
             </div>
         </div>
 
@@ -639,9 +941,11 @@
 
             <p class="info-text">💡 Adjust the sliders to explore different scenarios. Watch how changes impact profitability.</p>
 
-            <div class="button-group">
-                <button class="primary" onclick="generateProjections()">Generate Projections</button>
-                <button onclick="goToStep(1)">Back to Step 2</button>
+            <div class="nav-button-group">
+                <div class="nav-buttons">
+                    <button onclick="goToStep(1)">Back to Step 2</button>
+                    <button class="primary" onclick="generateProjections()">Generate Projections</button>
+                </div>
             </div>
         </div>
 
@@ -652,9 +956,29 @@
 
             <div id="projectionsOutput"></div>
 
-            <div class="button-group">
-                <button class="primary" onclick="goToStep(2)">Adjust Assumptions</button>
-                <button onclick="goToStep(1)">Back to Step 2</button>
+            <div class="nav-button-group">
+                <div class="nav-buttons">
+                    <button onclick="goToStep(2)">Adjust Assumptions</button>
+                    <button onclick="goToStep(1)">Back to Step 2</button>
+                    <button class="primary" onclick="goToStep(4)">View Risk Analysis</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 5: Risk Analysis -->
+        <div class="step-container" id="step5">
+            <h2 class="step-title">Step 5: Financial Risk Analysis</h2>
+            <p class="step-subtitle">Adjust probability and impact of risks to see how scenarios change. Edit values in the risk cards below.</p>
+
+            <div id="updateNotification"></div>
+
+            <div id="riskAnalysisOutput"></div>
+
+            <div class="nav-button-group">
+                <div class="nav-buttons">
+                    <button onclick="goToStep(3)">Back to Projections</button>
+                    <button onclick="goToStep(2)">Adjust Assumptions</button>
+                </div>
             </div>
         </div>
     </div>
@@ -675,11 +999,90 @@
             }
         };
 
+        const financialRisks = [
+            {
+                id: 'membership',
+                name: 'Member Acquisition Risk',
+                level: 'high',
+                description: 'Actual membership growth may be slower than projected. Market saturation or competition could reduce enrollment.',
+                probability: 35,
+                impact: 20,
+                mitigation: 'Develop targeted marketing campaigns, loyalty programs, and partnerships with local organizations.'
+            },
+            {
+                id: 'labor',
+                name: 'Labor Cost Inflation',
+                level: 'high',
+                description: 'Wages and benefits may increase faster than 3% annually due to market pressure or regulatory changes.',
+                probability: 40,
+                impact: 10,
+                mitigation: 'Lock in multi-year contracts with key staff, cross-train employees, explore automation opportunities.'
+            },
+            {
+                id: 'utilization',
+                name: 'Equipment Utilization Risk',
+                level: 'medium',
+                description: 'Purchased equipment may have lower usage rates than expected, reducing revenue from classes and services.',
+                probability: 30,
+                impact: 15,
+                mitigation: 'Create class schedules based on member demand surveys, offer incentives for off-peak usage.'
+            },
+            {
+                id: 'regulatory',
+                name: 'Regulatory & Compliance Risk',
+                level: 'medium',
+                description: 'New health & safety regulations or accessibility requirements could increase operating costs unexpectedly.',
+                probability: 25,
+                impact: 8,
+                mitigation: 'Stay informed of regulatory changes, build compliance into facility design from the start.'
+            },
+            {
+                id: 'economic',
+                name: 'Economic Downturn Risk',
+                level: 'medium',
+                description: 'Recession or economic slowdown could reduce discretionary spending on fitness memberships.',
+                probability: 20,
+                impact: 25,
+                mitigation: 'Diversify revenue streams (rentals, corporate memberships, online services), maintain cash reserves.'
+            },
+            {
+                id: 'competition',
+                name: 'Competition Risk',
+                level: 'medium',
+                description: 'New competitors entering the market could capture market share and force price reductions.',
+                probability: 35,
+                impact: 15,
+                mitigation: 'Build strong brand loyalty, invest in unique amenities, create community partnerships.'
+            },
+            {
+                id: 'supplier',
+                name: 'Supplier & Energy Cost Risk',
+                level: 'low',
+                description: 'Energy prices or supply chain disruptions could increase operational costs beyond inflation rates.',
+                probability: 30,
+                impact: 7,
+                mitigation: 'Implement energy-efficient systems, negotiate long-term supplier contracts, diversify suppliers.'
+            },
+            {
+                id: 'liability',
+                name: 'Liability & Insurance Risk',
+                level: 'medium',
+                description: 'Accidents or claims could increase insurance premiums or lead to uninsured losses.',
+                probability: 15,
+                impact: 35,
+                mitigation: 'Comprehensive staff training, modern safety equipment, detailed incident protocols, liability coverage.'
+            }
+        ];
+
         let currentStep = 0;
         let attempts = 3;
         let allocations = { capital: [], operating: [], revenue: [] };
         let draggedElement = null;
         let step1Completed = false;
+        let currentProjections = [];
+        let completedSteps = [false, false, false, false, false];
+        let baseRevenue = 0;
+        let baseCost = 0;
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -692,8 +1095,28 @@
             document.querySelectorAll('.progress-dot').forEach(dot => {
                 dot.addEventListener('click', function() {
                     const step = parseInt(this.getAttribute('data-step'));
-                    goToStep(step);
+                    if (!this.classList.contains('locked') || step === 0 || step <= getCurrentMaxAccessibleStep()) {
+                        goToStep(step);
+                    }
                 });
+            });
+        }
+
+        function getCurrentMaxAccessibleStep() {
+            for (let i = 0; i < completedSteps.length; i++) {
+                if (!completedSteps[i]) return i - 1;
+            }
+            return 4;
+        }
+
+        function updateProgressDots() {
+            document.querySelectorAll('.progress-dot').forEach((dot, idx) => {
+                const isCompleted = completedSteps[idx];
+                const isAccessible = idx === 0 || idx <= getCurrentMaxAccessibleStep() + 1;
+                
+                dot.classList.toggle('completed', isCompleted);
+                dot.classList.toggle('locked', !isAccessible);
+                dot.classList.toggle('active', idx === currentStep);
             });
         }
 
@@ -805,15 +1228,8 @@
             if (correct) {
                 feedback.innerHTML = '<div class="feedback success">✓ Perfect! All items correctly allocated.</div>';
                 step1Completed = true;
-                document.querySelectorAll('.progress-dot').forEach((dot, idx) => {
-                    if (idx === 0) {
-                        dot.classList.add('completed');
-                        dot.classList.remove('active');
-                    }
-                    if (idx > 0) {
-                        dot.classList.remove('disabled');
-                    }
-                });
+                completedSteps[0] = true;
+                updateProgressDots();
                 setTimeout(() => goToStep(1), 1200);
             } else {
                 attempts--;
@@ -826,15 +1242,8 @@
                     autoAllocateAll();
                     setTimeout(() => {
                         step1Completed = true;
-                        document.querySelectorAll('.progress-dot').forEach((dot, idx) => {
-                            if (idx === 0) {
-                                dot.classList.add('completed');
-                                dot.classList.remove('active');
-                            }
-                            if (idx > 0) {
-                                dot.classList.remove('disabled');
-                            }
-                        });
+                        completedSteps[0] = true;
+                        updateProgressDots();
                         goToStep(1);
                     }, 2000);
                 }
@@ -884,10 +1293,11 @@
                     el.classList.toggle('active', idx === currentStep);
                 });
 
-                document.querySelectorAll('.progress-dot').forEach((el, idx) => {
-                    el.classList.remove('active');
-                    if (idx === currentStep) el.classList.add('active');
-                });
+                updateProgressDots();
+
+                if (stepNum === 4) {
+                    displayRiskAnalysis();
+                }
 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
@@ -910,9 +1320,11 @@
             const costInflation = parseFloat(document.getElementById('costInflation').value) / 100;
             const capitalReserve = parseFloat(document.getElementById('capitalReserve').value) / 100;
 
-            let projections = [];
+            currentProjections = [];
             let revenue = 1490000;
             let cost = 1540000;
+            baseRevenue = revenue;
+            baseCost = cost;
 
             for (let year = 1; year <= 5; year++) {
                 if (year > 1) {
@@ -923,7 +1335,7 @@
                 const reserve = revenue * capitalReserve;
                 const surplus = revenue - cost - reserve;
 
-                projections.push({
+                currentProjections.push({
                     year,
                     revenue: Math.round(revenue),
                     cost: Math.round(cost),
@@ -933,7 +1345,7 @@
 
             let html = '<table class="projections-table"><thead><tr><th>Year</th><th>Revenue (£)</th><th>Operating Cost (£)</th><th>Surplus/(Deficit) (£)</th></tr></thead><tbody>';
 
-            projections.forEach(p => {
+            currentProjections.forEach(p => {
                 const surplusClass = p.surplus >= 0 ? 'positive' : 'negative';
                 const surplusSign = p.surplus >= 0 ? '+' : '';
                 html += `<tr><td><strong>Year ${p.year}</strong></td><td>${p.revenue.toLocaleString()}</td><td>${p.cost.toLocaleString()}</td><td class="${surplusClass}">${surplusSign}${p.surplus.toLocaleString()}</td></tr>`;
@@ -941,7 +1353,7 @@
 
             html += '</tbody></table>';
 
-            const breakEvenYear = projections.find(p => p.surplus >= 0);
+            const breakEvenYear = currentProjections.find(p => p.surplus >= 0);
             if (breakEvenYear) {
                 html += `<div class="success-message"><strong>✓ Break-even achieved in Year ${breakEvenYear.year}</strong></div>`;
             } else {
@@ -950,11 +1362,219 @@
 
             document.getElementById('projectionsOutput').innerHTML = html;
 
-            document.querySelectorAll('.progress-dot').forEach((dot, idx) => {
-                if (idx === 3) dot.classList.add('active');
-            });
+            completedSteps[2] = true;
+            completedSteps[3] = true;
+            completedSteps[4] = true;
+            updateProgressDots();
 
             goToStep(3);
+        }
+
+        function displayRiskAnalysis() {
+            let html = `
+                <div class="risk-section">
+                    <div class="risk-section-title">⚠️ Key Financial Risks (Editable)</div>
+                    <p class="info-text">💡 Adjust the Probability (%) and Impact (%) values in each risk card to see how scenarios change dynamically.</p>
+                    <div class="risk-cards" id="riskCardsContainer"></div>
+                </div>
+
+                <div class="risk-section">
+                    <div class="risk-section-title">📊 Scenario Analysis: Year 3 Projection</div>
+                    <p class="info-text">How different risk scenarios could impact your Year 3 financial projections (updates as you adjust risk parameters):</p>
+                    <table class="sensitivity-table" id="sensitivityTable"></table>
+                </div>
+
+                <div class="risk-section">
+                    <div class="risk-section-title">📈 Overall Risk Profile</div>
+                    <div id="riskSummary"></div>
+                </div>
+            `;
+
+            document.getElementById('riskAnalysisOutput').innerHTML = html;
+            
+            renderRiskCards();
+            renderSensitivityAnalysis();
+            renderRiskSummary();
+        }
+
+        function renderRiskCards() {
+            const container = document.getElementById('riskCardsContainer');
+            container.innerHTML = '';
+
+            financialRisks.forEach((risk, idx) => {
+                const card = document.createElement('div');
+                card.className = `risk-card ${risk.level}`;
+                card.innerHTML = `
+                    <div class="risk-card-header">
+                        <div class="risk-card-title">${risk.name}</div>
+                        <span class="risk-badge ${risk.level}">${risk.level}</span>
+                    </div>
+                    <div class="risk-description">${risk.description}</div>
+                    <div class="risk-parameters">
+                        <div class="risk-param-row">
+                            <span class="risk-param-label">Probability:</span>
+                            <input type="number" class="risk-param-input" value="${risk.probability}" min="0" max="100" data-risk="${idx}" data-param="probability" onchange="updateRiskParameter(this)">
+                            <span class="risk-param-unit">%</span>
+                        </div>
+                        <div class="risk-param-row">
+                            <span class="risk-param-label">Impact:</span>
+                            <input type="number" class="risk-param-input" value="${risk.impact}" min="0" max="100" data-risk="${idx}" data-param="impact" onchange="updateRiskParameter(this)">
+                            <span class="risk-param-unit">%</span>
+                        </div>
+                    </div>
+                    <div class="risk-mitigation">
+                        <div class="risk-mitigation-label">Mitigation:</div>
+                        <div>${risk.mitigation}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateRiskParameter(input) {
+            const riskIdx = parseInt(input.getAttribute('data-risk'));
+            const param = input.getAttribute('data-param');
+            const value = Math.max(0, Math.min(100, parseInt(input.value) || 0));
+            
+            financialRisks[riskIdx][param] = value;
+            input.value = value;
+
+            // Show update notification
+            const notifContainer = document.getElementById('updateNotification');
+            notifContainer.innerHTML = `<div class="update-notification">✓ Risk parameters updated. Scenario analysis has been recalculated.</div>`;
+            setTimeout(() => {
+                notifContainer.innerHTML = '';
+            }, 3000);
+
+            // Update scenario analysis
+            renderSensitivityAnalysis();
+            renderRiskSummary();
+        }
+
+        function renderSensitivityAnalysis() {
+            if (currentProjections.length === 0) return;
+
+            const year3Base = currentProjections[2];
+            
+            // Calculate combined risk impact
+            let revenueImpactPercent = 0;
+            let costImpactPercent = 0;
+
+            financialRisks.forEach(risk => {
+                const riskSeverity = (risk.probability / 100) * (risk.impact / 100);
+                
+                // Revenue risks
+                if (['membership', 'utilization', 'economic', 'competition'].includes(risk.id)) {
+                    revenueImpactPercent += riskSeverity * risk.impact;
+                }
+                
+                // Cost risks
+                if (['labor', 'regulatory', 'supplier', 'liability'].includes(risk.id)) {
+                    costImpactPercent += riskSeverity * risk.impact;
+                }
+            });
+
+            // Normalize percentages
+            revenueImpactPercent = Math.min(50, revenueImpactPercent);
+            costImpactPercent = Math.min(25, costImpactPercent);
+
+            // Scenario calculations
+            const worstCase = {
+                revenue: Math.round(year3Base.revenue * (1 - revenueImpactPercent / 100)),
+                cost: Math.round(year3Base.cost * (1 + costImpactPercent / 100)),
+            };
+            worstCase.surplus = worstCase.revenue - worstCase.cost;
+
+            const bestCase = {
+                revenue: Math.round(year3Base.revenue * 1.15),
+                cost: Math.round(year3Base.cost * 0.95),
+            };
+            bestCase.surplus = bestCase.revenue - bestCase.cost;
+
+            let html = `
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Revenue (£)</th>
+                        <th>Operating Cost (£)</th>
+                        <th>Surplus/(Deficit) (£)</th>
+                        <th>Change vs Base</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="scenario-label worst-case">⬇️ Worst Case</td>
+                        <td class="worst-case">${worstCase.revenue.toLocaleString()}</td>
+                        <td class="worst-case">${worstCase.cost.toLocaleString()}</td>
+                        <td class="worst-case">${worstCase.surplus.toLocaleString()}</td>
+                        <td class="worst-case">${((worstCase.surplus - year3Base.surplus) / Math.abs(year3Base.surplus) * 100).toFixed(0)}%</td>
+                    </tr>
+                    <tr>
+                        <td class="scenario-label base-case">━ Base Case</td>
+                        <td class="base-case">${year3Base.revenue.toLocaleString()}</td>
+                        <td class="base-case">${year3Base.cost.toLocaleString()}</td>
+                        <td class="base-case">${year3Base.surplus.toLocaleString()}</td>
+                        <td class="base-case">0%</td>
+                    </tr>
+                    <tr>
+                        <td class="scenario-label best-case">⬆️ Best Case</td>
+                        <td class="best-case">${bestCase.revenue.toLocaleString()}</td>
+                        <td class="best-case">${bestCase.cost.toLocaleString()}</td>
+                        <td class="best-case">${bestCase.surplus.toLocaleString()}</td>
+                        <td class="best-case">+${((bestCase.surplus - year3Base.surplus) / year3Base.surplus * 100).toFixed(0)}%</td>
+                    </tr>
+                </tbody>
+            `;
+
+            document.getElementById('sensitivityTable').innerHTML = html;
+        }
+
+        function renderRiskSummary() {
+            const highRisks = financialRisks.filter(r => r.level === 'high').length;
+            const mediumRisks = financialRisks.filter(r => r.level === 'medium').length;
+            const lowRisks = financialRisks.filter(r => r.level === 'low').length;
+            
+            // Calculate weighted risk score based on current parameters
+            let totalRiskScore = 0;
+            financialRisks.forEach(risk => {
+                const weighted = (risk.probability / 100) * (risk.impact / 100) * 100;
+                totalRiskScore += weighted;
+            });
+            const riskScore = Math.min(100, totalRiskScore);
+
+            let html = `
+                <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; border: 1px solid #dee2e6;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                        <div>
+                            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 8px;">High Risk Factors</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #e74c3c;">${highRisks}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 8px;">Medium Risk Factors</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #f39c12;">${mediumRisks}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 8px;">Low Risk Factors</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #27ae60;">${lowRisks}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #dee2e6;">
+                        <div style="font-size: 13px; color: #2c3e50; font-weight: 600; margin-bottom: 8px;">Overall Risk Score (Dynamic)</div>
+                        <div class="risk-score-bar">
+                            <div class="risk-bar">
+                                <div class="risk-bar-fill" style="width: ${riskScore}%"></div>
+                            </div>
+                            <span class="risk-percentage">${Math.round(riskScore)}%</span>
+                        </div>
+                        <div style="font-size: 12px; color: #7f8c8d; margin-top: 8px;">
+                            This project has a ${riskScore < 25 ? 'low' : riskScore < 50 ? 'moderate' : 'high'} risk profile. Regular monitoring and proactive mitigation strategies are ${riskScore > 50 ? 'highly' : ''} recommended.
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('riskSummary').innerHTML = html;
         }
     </script>
 </body>
